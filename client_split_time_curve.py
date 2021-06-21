@@ -78,52 +78,6 @@ class HeadNet(nn.Module):
 
 #------------------------------------------------------------------------------------------------------------
 # MAIN FUNCTIONS
-
-def single_image_prediction(image_path):
-    print("---------------------------------------------------------")
-    print(f"[READING] the image {image_path}")
-    #PROCESSING THE INPUT IMAGE
-    input_image = Image.open(image_path)
-    print("---------------------------------------------------------")
-    print("[PREPROCESSING] input image")
-    preprocess = transforms.Compose([
-        transforms.Resize(256) , transforms.CenterCrop(224) ,transforms.ToTensor() , transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-    input_tensor = preprocess(input_image)
-    input_batch = input_tensor.unsqueeze(0)
-    print("---------------------------------------------------------")
-    print("[IMAGE] preprocessed")
-    print("---------------------------------------------------------")
-    print(f"[TOTAL] layers of network - {len(layers_of_network)}")
-    time_inference_client_start = time.time()
-    print("---------------------------------------------------------")
-    print("[GENERATING] a random number")
-    print("---------------------------------------------------------")
-    random_layer = generate_random_number(len(layers_of_network))
-    print(f"[GENERATED] random number - {random_layer}")
-    headnetwork = HeadNet(layers_of_network , random_layer)
-    print("[HEAD PREDICTION] ready to be performed")
-    print("----------------------------------------------------------")
-    with torch.no_grad():      
-        activation = headnetwork(input_batch)
-    print("[SHAPE] of intermediate activations from head")
-    print("---------------------------------------------------------")
-    print(activation.shape)
-    activation = activation.numpy().tolist()
-    print("---------------------------------------------------------")
-    print("[SENDING] the activations at split to the server")
-    print("---------------------------------------------------------")
-    time_inference_total_client = time.time() - time_inference_client_start
-    data = {'i': random_layer , 'activation' : activation , 'time_client_sends_activation' : time.time()}
-    response = requests.post(url+"/tail_prediction", json = data)
-    print("[RECEIVED] results from the server")
-    print("---------------------------------------------------------")
-    result = json.loads(response.text)
-    download_time = time.time() - result["time_server_sends_client"]
-    print(f"Prediction is {result['category']} with confidence {result['confidence_score']} and inference time on edge {time_inference_total_client} , upload time {result['time_upload']} , inference time on server {result['time_inference_server']} , download time {download_time}")
-    print("---------------------------------------------------------")
-
-
 def time_image_predictions(image_path):
     print("---------------------------------------------------------")
     print(f"[READING] the image {image_path}")
@@ -178,18 +132,9 @@ def time_image_predictions(image_path):
 #URL FOR SERVER
 url = load_settings()["server_url"]
 #------------------------------------------------------------------------------------------------------------
-#WHILE LOOP
-request_again= True
-while request_again:
-    toDo = int(input("[ENTER] choice- \n\n 1) Random Splitting on single image \n 2) Time on a image(For all splits) \n"))
-    if toDo == 1:
-        print("---------------------------------------------------------")
-        image_path = input("[ENTER] image path \n")
-        single_image_prediction(image_path)
-    if toDo == 2:
-        print("---------------------------------------------------------")
-        image_path = input("[ENTER] image path \n")
-        time_image_predictions(image_path)
-
+print("Plotting time on a image(For all splits) for alexnet model")
+print("---------------------------------------------------------")
+image_path = "test_images/dog.jpg"
+time_image_predictions(image_path)
 
 
